@@ -1,0 +1,889 @@
+openapi: 3.0.3
+info:
+  title: Shinka Financial Analysis API
+  description: |
+    決算書分析・コンサルティング提案生成API
+
+    ## 主要機能
+    - 決算書ファイルアップロード（PDF/Excel/CSV）
+    - AI駆動財務分析（Claude Sonnet 4）
+    - コンサルティング提案書自動生成
+    - 業界ベンチマーク比較
+    - Server-Sent Events（SSE）によるリアルタイム進捗通知
+
+    ## 認証
+    全てのエンドポイント（一部を除く）はJWT Bearer認証が必要です。
+
+    ```
+    Authorization: Bearer <JWT_TOKEN>
+    ```
+  version: 1.0.0
+  contact:
+    name: Shinka API Support
+    email: support@shinka.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: ローカル開発環境
+  - url: https://api.shinka.example.com/api/v1
+    description: 本番環境
+
+tags:
+  - name: Statements
+    description: 決算書管理エンドポイント
+  - name: Analysis
+    description: 財務分析エンドポイント
+  - name: Proposals
+    description: コンサルティング提案エンドポイント
+  - name: Benchmarks
+    description: 業界ベンチマークエンドポイント
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWTトークンを使用した認証
+
+        トークン取得方法は別途提供される認証エンドポイントを参照してください。
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - timestamp
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Request validation failed
+            details:
+              oneOf:
+                - type: string
+                - type: object
+            timestamp:
+              type: string
+              format: date-time
+            path:
+              type: string
+            stack:
+              type: string
+              description: 開発環境のみ
+
+    FinancialStatement:
+      type: object
+      required:
+        - id
+        - company
+        - period
+        - metadata
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: stmt_1234567890_abc123
+        company:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              example: 株式会社サンプル
+            securityCode:
+              type: string
+              example: "1234"
+            industry:
+              type: string
+              example: 情報通信業
+        period:
+          type: object
+          required:
+            - startDate
+            - endDate
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+            fiscalYear:
+              type: integer
+              example: 2023
+        balanceSheet:
+          type: object
+          description: 貸借対照表データ
+        incomeStatement:
+          type: object
+          description: 損益計算書データ
+        cashFlowStatement:
+          type: object
+          description: キャッシュフロー計算書データ
+        metadata:
+          type: object
+          properties:
+            sourceFile:
+              type: string
+            format:
+              type: string
+              enum: [pdf, excel, csv]
+            parsedAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AnalysisJob:
+      type: object
+      required:
+        - id
+        - statementId
+        - status
+        - progress
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: job_1234567890_abc123
+        statementId:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 75
+        result:
+          type: object
+          description: 分析結果（completedの場合のみ）
+        error:
+          type: string
+          description: エラーメッセージ（failedの場合のみ）
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    ProposalJob:
+      type: object
+      required:
+        - id
+        - status
+        - progress
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: proposal_1234567890_abc123
+        status:
+          type: string
+          enum: [pending, generating, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        proposal:
+          $ref: '#/components/schemas/ConsultingProposal'
+        error:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    ConsultingProposal:
+      type: object
+      required:
+        - id
+        - title
+        - clientName
+        - createdAt
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        clientName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        executiveSummary:
+          type: object
+        currentState:
+          type: object
+        issues:
+          type: array
+          items:
+            type: object
+        measures:
+          type: array
+          items:
+            type: object
+        implementationPlan:
+          type: object
+        expectedEffects:
+          type: object
+        investmentPlan:
+          type: object
+
+    IndustryBenchmark:
+      type: object
+      required:
+        - metric
+        - average
+        - median
+      properties:
+        metric:
+          type: string
+          example: roe
+        average:
+          type: number
+          format: double
+          example: 12.5
+        median:
+          type: number
+          format: double
+          example: 11.8
+        q1:
+          type: number
+          format: double
+          example: 8.2
+        q3:
+          type: number
+          format: double
+          example: 15.6
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+
+paths:
+  # ===================================
+  # Statements Endpoints
+  # ===================================
+  /statements/upload:
+    post:
+      tags:
+        - Statements
+      summary: 決算書ファイルアップロード
+      description: |
+        決算書ファイル（PDF/Excel/CSV）をアップロードし、自動的にパースします。
+
+        **レート制限**: 15分間に10リクエスト
+      operationId: uploadStatement
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: companyName
+          schema:
+            type: string
+          description: 企業名（オプション）
+        - in: query
+          name: fiscalYear
+          schema:
+            type: string
+            pattern: '^\d{4}$'
+          description: 会計年度（オプション）
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 決算書ファイル（PDF/Excel/CSV、最大10MB）
+      responses:
+        '201':
+          description: アップロード成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/FinancialStatement'
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /statements/{id}:
+    get:
+      tags:
+        - Statements
+      summary: 決算書詳細取得
+      operationId: getStatement
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 決算書ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/FinancialStatement'
+        '404':
+          description: 未検出
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Statements
+      summary: 決算書削除（管理者のみ）
+      operationId: deleteStatement
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 削除成功
+        '403':
+          description: 権限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 未検出
+
+  /statements:
+    get:
+      tags:
+        - Statements
+      summary: 決算書一覧取得
+      description: ページネーション、フィルタリング、ソート対応
+      operationId: listStatements
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: companyName
+          schema:
+            type: string
+        - in: query
+          name: fiscalYear
+          schema:
+            type: string
+            pattern: '^\d{4}$'
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [createdAt, fiscalYear, companyName]
+            default: createdAt
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FinancialStatement'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+  # ===================================
+  # Analysis Endpoints
+  # ===================================
+  /analysis/run:
+    post:
+      tags:
+        - Analysis
+      summary: 財務分析実行
+      description: |
+        指定された決算書に対して財務分析を実行します（非同期）。
+
+        **レート制限**: 1時間に20リクエスト
+      operationId: runAnalysis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - statementId
+              properties:
+                statementId:
+                  type: string
+                options:
+                  type: object
+                  properties:
+                    includeBenchmark:
+                      type: boolean
+                      default: true
+                    includeAnomalyDetection:
+                      type: boolean
+                      default: true
+                    verbose:
+                      type: boolean
+                      default: false
+      responses:
+        '202':
+          description: 分析ジョブ作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                      status:
+                        type: string
+                      message:
+                        type: string
+
+  /analysis/{id}:
+    get:
+      tags:
+        - Analysis
+      summary: 分析結果取得
+      operationId: getAnalysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 分析ジョブID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/AnalysisJob'
+
+  /analysis/{id}/stream:
+    get:
+      tags:
+        - Analysis
+      summary: 分析進捗SSE
+      description: |
+        Server-Sent Eventsで分析進捗をリアルタイム受信します。
+
+        **イベントタイプ**:
+        - `status`: 初期状態
+        - `progress`: 進捗更新
+        - `logs`: ログメッセージ
+        - `complete`: 分析完了
+        - `error`: エラー発生
+
+        **レート制限**: 5分間に10リクエスト
+      operationId: streamAnalysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSEストリーム
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: progress
+                  data: {"status":"running","progress":50}
+
+  # ===================================
+  # Proposals Endpoints
+  # ===================================
+  /proposals/generate:
+    post:
+      tags:
+        - Proposals
+      summary: コンサルティング提案生成
+      description: |
+        Claude AIを使用してコンサルティング提案書を生成します（非同期）。
+
+        **レート制限**: 1時間に20リクエスト
+      operationId: generateProposal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientName
+                - industry
+                - companySize
+                - mainChallenges
+              properties:
+                clientName:
+                  type: string
+                  example: 株式会社サンプル
+                industry:
+                  type: string
+                  example: 情報通信業
+                companySize:
+                  type: string
+                  example: 中小企業（従業員100名）
+                mainChallenges:
+                  type: string
+                  example: 売上高は伸びているが利益率が低い
+                additionalContext:
+                  type: string
+                focusValues:
+                  type: array
+                  items:
+                    type: string
+                    enum: [customer_value, employee_value, business_value, organization_value, brand_value, shareholder_value]
+      responses:
+        '202':
+          description: 生成ジョブ作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                      status:
+                        type: string
+                      message:
+                        type: string
+
+  /proposals/{id}:
+    get:
+      tags:
+        - Proposals
+      summary: 提案詳細取得
+      operationId: getProposal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ProposalJob'
+
+  /proposals/{id}/stream:
+    get:
+      tags:
+        - Proposals
+      summary: 提案生成進捗SSE
+      description: |
+        Server-Sent Eventsで提案生成進捗をリアルタイム受信します。
+
+        **レート制限**: 5分間に10リクエスト
+      operationId: streamProposal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSEストリーム
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /proposals/{id}/export:
+    get:
+      tags:
+        - Proposals
+      summary: 提案書エクスポート
+      description: |
+        完成した提案書をPDF/Excel/Markdown形式でエクスポートします。
+
+        **レート制限**: 15分間に20リクエスト
+      operationId: exportProposal
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [markdown, pdf, excel]
+            default: pdf
+      responses:
+        '200':
+          description: エクスポート成功
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/markdown:
+              schema:
+                type: string
+
+  # ===================================
+  # Benchmarks Endpoints
+  # ===================================
+  /benchmarks:
+    get:
+      tags:
+        - Benchmarks
+      summary: 全業界一覧取得
+      description: 認証不要
+      operationId: listIndustries
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: IT001
+                        name:
+                          type: string
+                          example: 情報通信業
+                        nameEn:
+                          type: string
+                          example: Information & Communications
+
+  /benchmarks/{industryCode}:
+    get:
+      tags:
+        - Benchmarks
+      summary: 業界基準値取得（サマリー）
+      description: 認証不要
+      operationId: getIndustryBenchmark
+      parameters:
+        - in: path
+          name: industryCode
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]{2,10}$'
+          example: IT001
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      industry:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                          name:
+                            type: string
+                          nameEn:
+                            type: string
+                      benchmarks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IndustryBenchmark'
+                      dataPoints:
+                        type: integer
+
+  /benchmarks/{industryCode}/metrics:
+    get:
+      tags:
+        - Benchmarks
+      summary: 特定業界の詳細データ取得
+      description: 認証必須（データポイント含む）
+      operationId: getIndustryMetrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: industryCode
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: metrics
+          schema:
+            type: string
+          description: カンマ区切りの指標名（例: roe,roa,operatingMargin）
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      industry:
+                        type: object
+                      metrics:
+                        type: array
+                        items:
+                          type: object
