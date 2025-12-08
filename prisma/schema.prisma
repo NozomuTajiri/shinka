@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// 1. ClientProfile - クライアント企業プロファイル
+// ============================================
+/// クライアント企業の基本情報と経営状況を管理
+model ClientProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // 基本情報
+  companyName     String   @db.VarChar(255)  // 会社名
+  industry        String   @db.VarChar(100)  // 業種
+  employeeCount   Int?                       // 従業員数
+  annualRevenue   Decimal? @db.Decimal(15, 2) // 年間売上高（円）
+  operatingMargin Decimal? @db.Decimal(5, 2)  // 営業利益率（%）
+
+  // 組織構造（JSON形式で柔軟に保存）
+  organizationStructure Json? @db.JsonB // 組織図、部門構成など
+
+  // 経営状況
+  businessChallenges String[] @db.VarChar(500) // 課題リスト
+  strengths          String[] @db.VarChar(500) // 強み
+  weaknesses         String[] @db.VarChar(500) // 弱み
+
+  // 契約情報
+  contractStartDate DateTime? @db.Date         // 契約開始日
+  contractEndDate   DateTime? @db.Date         // 契約終了日
+  contractStatus    String    @default("active") @db.VarChar(50) // active, suspended, terminated
+
+  // リレーション
+  keyPersons          KeyPerson[]          @relation("ClientKeyPersons")
+  avatarActivityLogs  AvatarActivityLog[]  @relation("ClientActivityLogs")
+  crossClientInsights CrossClientInsight[] @relation("ClientInsights")
+
+  // インデックス
+  @@index([companyName])
+  @@index([industry])
+  @@index([contractStatus])
+  @@map("client_profiles")
+}
+
+// ============================================
+// 2. KeyPerson - 主要担当者
+// ============================================
+/// クライアント企業の主要担当者情報
+model KeyPerson {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // 基本情報
+  clientId String @db.Uuid           // クライアントID
+  fullName String @db.VarChar(100)   // 氏名
+  position String @db.VarChar(100)   // 役職
+  email    String @db.VarChar(255)   // メールアドレス
+  phone    String? @db.VarChar(50)   // 電話番号
+
+  // 対話情報
+  communicationStyle String? @db.Text      // 対話スタイルメモ
+  authorityLevel     String  @default("member") @db.VarChar(50) // executive, manager, member
+
+  // リレーション
+  client             ClientProfile        @relation("ClientKeyPersons", fields: [clientId], references: [id], onDelete: Cascade)
+  avatarActivityLogs AvatarActivityLog[]  @relation("KeyPersonActivityLogs")
+
+  // インデックス
+  @@index([clientId])
+  @@index([email])
+  @@index([authorityLevel])
+  @@map("key_persons")
+}
+
+// ============================================
+// 3. AvatarActivityLog - アバター活動ログ
+// ============================================
+/// AIアバターの活動記録とインサイト抽出
+model AvatarActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // 活動基本情報
+  clientId      String   @db.Uuid                   // クライアントID
+  avatarId      String   @db.Uuid                   // アバターID
+  activityType  String   @db.VarChar(50)            // meeting, proposal, analysis, report, alert, internal_discussion
+  sessionStart  DateTime @db.Timestamptz            // セッション開始時刻
+  sessionEnd    DateTime? @db.Timestamptz           // セッション終了時刻
+  durationMinutes Int?                              // セッション時間（分）
+
+  // 参加者
+  keyPersonIds String[] @db.Uuid                    // 参加したKeyPersonのIDリスト
+
+  // 活動内容
+  summary        String  @db.Text                   // サマリ
+  fullRecord     String? @db.Text                   // 全文記録
+  recordingUrl   String? @db.VarChar(500)           // 録音・録画URL
+
+  // 抽出インサイト
+  extractedInsights Json? @db.JsonB                 // 抽出されたインサイト
+  actionItems       Json? @db.JsonB                 // アクションアイテム
+
+  // 品質評価
+  qualityScore      Decimal? @db.Decimal(5, 2)     // 品質スコア（0-100）
+  feedbackReceived  Boolean  @default(false)        // フィードバック受領フラグ
+
+  // リレーション
+  client            ClientProfile         @relation("ClientActivityLogs", fields: [clientId], references: [id], onDelete: Cascade)
+  avatar            AvatarConfiguration   @relation("AvatarActivityLogs", fields: [avatarId], references: [id], onDelete: Restrict)
+  keyPersons        KeyPerson[]           @relation("KeyPersonActivityLogs")
+
+  // インデックス
+  @@index([clientId])
+  @@index([avatarId])
+  @@index([activityType])
+  @@index([sessionStart])
+  @@index([qualityScore])
+  @@map("avatar_activity_logs")
+}
+
+// ============================================
+// 4. AvatarConfiguration - アバター構成
+// ============================================
+/// AIアバターの設定と能力定義
+model AvatarConfiguration {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // 基本情報
+  avatarName  String  @unique @db.VarChar(100)      // アバター名
+  category    String  @db.VarChar(50)               // 経営戦略/営業支援/財務分析/人事組織/技術革新
+  description String? @db.Text                      // 説明
+
+  // コアコンピテンシー
+  coreCompetencies String[] @db.VarChar(200)        // コアコンピテンシーリスト
+
+  // アクセス権限
+  accessibleDatabases String[] @db.VarChar(100)    // アクセス可能なDB/API
+
+  // 行動設定
+  behaviorPrinciples String? @db.Text               // 行動原則
+  persona            Json?   @db.JsonB              // ペルソナ設定
+
+  // 学習設定
+  learningEnabled    Boolean @default(true)         // 学習有効化
+  learningDataSources String[] @db.VarChar(200)    // 学習データソース
+
+  // 状態
+  status             String  @default("active") @db.VarChar(50) // active, inactive, deprecated
+
+  // リレーション
+  activityLogs       AvatarActivityLog[]           @relation("AvatarActivityLogs")
+  generationRules    AvatarGenerationRule[]        @relation("AvatarGenerationRules")
+
+  // インデックス
+  @@index([category])
+  @@index([status])
+  @@map("avatar_configurations")
+}
+
+// ============================================
+// 5. AvatarGenerationRule - アバター生成ルール
+// ============================================
+/// 動的アバター生成の条件と判断基準
+model AvatarGenerationRule {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // ルール基本情報
+  ruleName    String  @unique @db.VarChar(100)      // ルール名
+  description String? @db.Text                      // 説明
+  priority    Int     @default(0)                   // 優先度（高い方が先に評価）
+
+  // トリガー条件
+  triggerConditions Json @db.JsonB                  // トリガー条件（JSON形式）
+
+  // 生成判断基準
+  generationCriteria Json @db.JsonB                 // 生成判断基準
+
+  // 生成プロセス
+  generationProcess Json @db.JsonB                  // 生成プロセス定義
+
+  // 統廃合ルール
+  mergingRules      Json? @db.JsonB                 // アバター統廃合ルール
+
+  // 関連アバター（テンプレートとして使用）
+  templateAvatarId  String? @db.Uuid                // テンプレートアバターID
+
+  // 状態
+  enabled           Boolean @default(true)          // ルール有効化
+
+  // リレーション
+  templateAvatar    AvatarConfiguration? @relation("AvatarGenerationRules", fields: [templateAvatarId], references: [id], onDelete: SetNull)
+
+  // インデックス
+  @@index([priority])
+  @@index([enabled])
+  @@map("avatar_generation_rules")
+}
+
+// ============================================
+// 6. DiagnosisScenario - 診断質問シナリオ
+// ============================================
+/// クライアント診断用の質問シナリオ管理
+model DiagnosisScenario {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // シナリオ基本情報
+  scenarioName String  @unique @db.VarChar(100)     // シナリオ名
+  category     String  @db.VarChar(50)              // 診断カテゴリー（経営/営業/財務/人事/技術）
+  description  String? @db.Text                     // 説明
+
+  // シナリオ構造
+  questionFlow     Json @db.JsonB                   // 質問フロー（分岐・条件含む）
+  diagnosisLogic   Json @db.JsonB                   // 診断ロジック
+  outputTemplate   Json @db.JsonB                   // 出力テンプレート
+
+  // メタ情報
+  estimatedMinutes Int? @default(30)                // 推定所要時間（分）
+  difficultyLevel  String @default("medium") @db.VarChar(50) // easy, medium, hard
+
+  // 状態
+  published        Boolean @default(false)          // 公開済みフラグ
+  version          String  @default("1.0.0") @db.VarChar(20) // バージョン
+
+  // インデックス
+  @@index([category])
+  @@index([published])
+  @@map("diagnosis_scenarios")
+}
+
+// ============================================
+// 7. CrossClientInsight - 横断インサイト
+// ============================================
+/// クライアント横断的なインサイトと事例管理
+model CrossClientInsight {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // インサイト基本情報
+  insightType  String  @db.VarChar(50)              // best_practice, common_challenge, industry_trend, solution_pattern
+  title        String  @db.VarChar(255)             // タイトル
+  description  String  @db.Text                     // 詳細説明
+
+  // 匿名化事例
+  anonymizedCases Json @db.JsonB                    // 匿名化された事例集
+
+  // 適用条件
+  applicableIndustries String[] @db.VarChar(100)   // 適用可能な業種
+  applicableCompanySizes String[] @db.VarChar(50)  // 適用可能な企業規模
+
+  // 配信制御
+  confidenceLevel     Decimal  @default(0.0) @db.Decimal(5, 2) // 信頼度（0-100）
+  minConfidenceForShare Decimal @default(70.0) @db.Decimal(5, 2) // 共有に必要な最小信頼度
+
+  // 品質管理
+  reviewStatus        String   @default("pending") @db.VarChar(50) // pending, approved, rejected
+  reviewedBy          String?  @db.VarChar(100)    // レビュー者
+  reviewedAt          DateTime? @db.Timestamptz    // レビュー日時
+
+  // 配信履歴
+  sharedWithClients   String[] @db.Uuid            // 共有済みクライアントIDリスト
+
+  // リレーション
+  clients             ClientProfile[] @relation("ClientInsights")
+
+  // インデックス
+  @@index([insightType])
+  @@index([reviewStatus])
+  @@index([confidenceLevel])
+  @@map("cross_client_insights")
+}

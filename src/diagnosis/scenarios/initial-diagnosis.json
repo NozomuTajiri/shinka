@@ -1,0 +1,436 @@
+{
+  "id": "initial-diagnosis-v1",
+  "name": "初回診断シナリオ",
+  "version": "1.0.0",
+  "phases": [
+    {
+      "phase": "initial",
+      "name": "現状把握",
+      "description": "企業の基本情報と現状を把握するフェーズ",
+      "questionIds": [
+        "q001",
+        "q002",
+        "q003",
+        "q004",
+        "q005"
+      ]
+    },
+    {
+      "phase": "deep-dive",
+      "name": "課題深掘り",
+      "description": "特定された課題を深掘りするフェーズ",
+      "questionIds": [
+        "q006",
+        "q007",
+        "q008",
+        "q009",
+        "q010"
+      ]
+    },
+    {
+      "phase": "priority",
+      "name": "優先度確認",
+      "description": "改善の優先度を確認するフェーズ",
+      "questionIds": [
+        "q011",
+        "q012",
+        "q013"
+      ]
+    },
+    {
+      "phase": "summary",
+      "name": "まとめ",
+      "description": "全体の振り返りと期待値の確認",
+      "questionIds": [
+        "q014",
+        "q015"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "q001",
+      "phase": "initial",
+      "type": "single-choice",
+      "question": "貴社の現在の経営戦略は明確に定義されていますか?",
+      "description": "ビジョン・ミッション・中期経営計画の策定状況",
+      "options": [
+        {
+          "id": "q001_a",
+          "label": "明確に定義され、全社員に浸透している",
+          "weight": { "management": 1.0, "sales": 0.2, "organization": 0.3, "marketing": 0.2 }
+        },
+        {
+          "id": "q001_b",
+          "label": "定義されているが、浸透は不十分",
+          "weight": { "management": 0.6, "sales": 0.4, "organization": 0.5, "marketing": 0.4 }
+        },
+        {
+          "id": "q001_c",
+          "label": "曖昧で、明文化されていない",
+          "weight": { "management": 0.2, "sales": 0.3, "organization": 0.3, "marketing": 0.3 }
+        },
+        {
+          "id": "q001_d",
+          "label": "策定中または見直しが必要",
+          "weight": { "management": 0.4, "sales": 0.3, "organization": 0.4, "marketing": 0.3 }
+        }
+      ],
+      "relatedAxes": ["management", "organization"],
+      "required": true
+    },
+    {
+      "id": "q002",
+      "phase": "initial",
+      "type": "single-choice",
+      "question": "営業活動における最大の課題は何ですか?",
+      "options": [
+        {
+          "id": "q002_a",
+          "label": "リード獲得が不足している",
+          "weight": { "management": 0.2, "sales": 0.3, "organization": 0.1, "marketing": 0.8 },
+          "nextQuestion": "q006"
+        },
+        {
+          "id": "q002_b",
+          "label": "商談化率が低い",
+          "weight": { "management": 0.2, "sales": 0.8, "organization": 0.3, "marketing": 0.4 },
+          "nextQuestion": "q007"
+        },
+        {
+          "id": "q002_c",
+          "label": "受注率が低い",
+          "weight": { "management": 0.3, "sales": 0.9, "organization": 0.2, "marketing": 0.2 },
+          "nextQuestion": "q007"
+        },
+        {
+          "id": "q002_d",
+          "label": "営業人材が不足している",
+          "weight": { "management": 0.3, "sales": 0.5, "organization": 0.8, "marketing": 0.1 },
+          "nextQuestion": "q008"
+        }
+      ],
+      "relatedAxes": ["sales", "marketing", "organization"],
+      "required": true
+    },
+    {
+      "id": "q003",
+      "phase": "initial",
+      "type": "scale",
+      "question": "組織のコミュニケーション品質を5段階で評価してください",
+      "description": "部門間連携、情報共有、意思決定スピード",
+      "scaleRange": {
+        "min": 1,
+        "max": 5,
+        "minLabel": "非常に悪い",
+        "maxLabel": "非常に良い"
+      },
+      "relatedAxes": ["organization", "management"],
+      "required": true
+    },
+    {
+      "id": "q004",
+      "phase": "initial",
+      "type": "multiple-choice",
+      "question": "現在注力しているマーケティング施策を選択してください（複数選択可）",
+      "options": [
+        {
+          "id": "q004_a",
+          "label": "SEO/コンテンツマーケティング",
+          "weight": { "management": 0.1, "sales": 0.2, "organization": 0.1, "marketing": 0.8 }
+        },
+        {
+          "id": "q004_b",
+          "label": "SNSマーケティング",
+          "weight": { "management": 0.1, "sales": 0.2, "organization": 0.1, "marketing": 0.7 }
+        },
+        {
+          "id": "q004_c",
+          "label": "Web広告（リスティング・ディスプレイ）",
+          "weight": { "management": 0.1, "sales": 0.3, "organization": 0.1, "marketing": 0.8 }
+        },
+        {
+          "id": "q004_d",
+          "label": "イベント・セミナー",
+          "weight": { "management": 0.2, "sales": 0.4, "organization": 0.2, "marketing": 0.6 }
+        },
+        {
+          "id": "q004_e",
+          "label": "特に実施していない",
+          "weight": { "management": 0.2, "sales": 0.2, "organization": 0.1, "marketing": 0.1 }
+        }
+      ],
+      "relatedAxes": ["marketing", "sales"],
+      "required": true
+    },
+    {
+      "id": "q005",
+      "phase": "initial",
+      "type": "scale",
+      "question": "人材育成・教育体制の充実度を5段階で評価してください",
+      "scaleRange": {
+        "min": 1,
+        "max": 5,
+        "minLabel": "全く充実していない",
+        "maxLabel": "非常に充実している"
+      },
+      "relatedAxes": ["organization", "management"],
+      "required": true
+    },
+    {
+      "id": "q006",
+      "phase": "deep-dive",
+      "type": "single-choice",
+      "question": "リード獲得における具体的な課題は何ですか?",
+      "options": [
+        {
+          "id": "q006_a",
+          "label": "ターゲット顧客が明確でない",
+          "weight": { "management": 0.5, "sales": 0.4, "organization": 0.2, "marketing": 0.8 }
+        },
+        {
+          "id": "q006_b",
+          "label": "コンテンツ制作のリソースが不足",
+          "weight": { "management": 0.2, "sales": 0.3, "organization": 0.6, "marketing": 0.7 }
+        },
+        {
+          "id": "q006_c",
+          "label": "予算が限られている",
+          "weight": { "management": 0.6, "sales": 0.3, "organization": 0.2, "marketing": 0.6 }
+        },
+        {
+          "id": "q006_d",
+          "label": "効果測定ができていない",
+          "weight": { "management": 0.4, "sales": 0.4, "organization": 0.3, "marketing": 0.8 }
+        }
+      ],
+      "relatedAxes": ["marketing", "sales", "management"],
+      "required": true,
+      "skipCondition": {
+        "type": "answer-equals",
+        "questionId": "q002",
+        "value": "q002_a"
+      }
+    },
+    {
+      "id": "q007",
+      "phase": "deep-dive",
+      "type": "single-choice",
+      "question": "商談・受注における課題の要因は何だと考えますか?",
+      "options": [
+        {
+          "id": "q007_a",
+          "label": "提案内容の質が不十分",
+          "weight": { "management": 0.3, "sales": 0.9, "organization": 0.4, "marketing": 0.2 }
+        },
+        {
+          "id": "q007_b",
+          "label": "価格競争力が弱い",
+          "weight": { "management": 0.6, "sales": 0.7, "organization": 0.1, "marketing": 0.3 }
+        },
+        {
+          "id": "q007_c",
+          "label": "営業プロセスが標準化されていない",
+          "weight": { "management": 0.4, "sales": 0.8, "organization": 0.5, "marketing": 0.2 }
+        },
+        {
+          "id": "q007_d",
+          "label": "顧客ニーズの把握が不十分",
+          "weight": { "management": 0.3, "sales": 0.9, "organization": 0.3, "marketing": 0.4 }
+        }
+      ],
+      "relatedAxes": ["sales", "management"],
+      "required": true,
+      "skipCondition": {
+        "type": "answer-equals",
+        "questionId": "q002",
+        "value": "q002_b"
+      }
+    },
+    {
+      "id": "q008",
+      "phase": "deep-dive",
+      "type": "single-choice",
+      "question": "人材に関する最大の課題は何ですか?",
+      "options": [
+        {
+          "id": "q008_a",
+          "label": "採用が困難",
+          "weight": { "management": 0.4, "sales": 0.3, "organization": 0.9, "marketing": 0.3 }
+        },
+        {
+          "id": "q008_b",
+          "label": "育成・教育体制が不十分",
+          "weight": { "management": 0.3, "sales": 0.4, "organization": 0.8, "marketing": 0.2 }
+        },
+        {
+          "id": "q008_c",
+          "label": "離職率が高い",
+          "weight": { "management": 0.5, "sales": 0.3, "organization": 0.9, "marketing": 0.2 }
+        },
+        {
+          "id": "q008_d",
+          "label": "評価制度が不明瞭",
+          "weight": { "management": 0.6, "sales": 0.2, "organization": 0.8, "marketing": 0.1 }
+        }
+      ],
+      "relatedAxes": ["organization", "management"],
+      "required": true,
+      "skipCondition": {
+        "type": "answer-equals",
+        "questionId": "q002",
+        "value": "q002_d"
+      }
+    },
+    {
+      "id": "q009",
+      "phase": "deep-dive",
+      "type": "scale",
+      "question": "経営会議の質と効率性を5段階で評価してください",
+      "description": "意思決定のスピード、議論の深さ、アクションの明確性",
+      "scaleRange": {
+        "min": 1,
+        "max": 5,
+        "minLabel": "非常に悪い",
+        "maxLabel": "非常に良い"
+      },
+      "relatedAxes": ["management", "organization"],
+      "required": true
+    },
+    {
+      "id": "q010",
+      "phase": "deep-dive",
+      "type": "single-choice",
+      "question": "データ活用の現状はどうですか?",
+      "options": [
+        {
+          "id": "q010_a",
+          "label": "データドリブンな意思決定ができている",
+          "weight": { "management": 0.9, "sales": 0.8, "organization": 0.6, "marketing": 0.8 }
+        },
+        {
+          "id": "q010_b",
+          "label": "データは収集しているが、活用は限定的",
+          "weight": { "management": 0.5, "sales": 0.5, "organization": 0.4, "marketing": 0.5 }
+        },
+        {
+          "id": "q010_c",
+          "label": "データ収集すらできていない",
+          "weight": { "management": 0.2, "sales": 0.2, "organization": 0.2, "marketing": 0.2 }
+        }
+      ],
+      "relatedAxes": ["management", "sales", "marketing"],
+      "required": true
+    },
+    {
+      "id": "q011",
+      "phase": "priority",
+      "type": "single-choice",
+      "question": "今後6ヶ月で最も注力したい領域はどれですか?",
+      "options": [
+        {
+          "id": "q011_a",
+          "label": "経営戦略の明確化",
+          "weight": { "management": 1.0, "sales": 0.3, "organization": 0.4, "marketing": 0.3 }
+        },
+        {
+          "id": "q011_b",
+          "label": "営業力強化",
+          "weight": { "management": 0.3, "sales": 1.0, "organization": 0.4, "marketing": 0.5 }
+        },
+        {
+          "id": "q011_c",
+          "label": "組織・人材育成",
+          "weight": { "management": 0.4, "sales": 0.3, "organization": 1.0, "marketing": 0.2 }
+        },
+        {
+          "id": "q011_d",
+          "label": "マーケティング強化",
+          "weight": { "management": 0.2, "sales": 0.4, "organization": 0.2, "marketing": 1.0 }
+        }
+      ],
+      "relatedAxes": ["management", "sales", "organization", "marketing"],
+      "required": true
+    },
+    {
+      "id": "q012",
+      "phase": "priority",
+      "type": "scale",
+      "question": "AI・DXツール導入への意欲を5段階で評価してください",
+      "scaleRange": {
+        "min": 1,
+        "max": 5,
+        "minLabel": "全く関心がない",
+        "maxLabel": "積極的に導入したい"
+      },
+      "relatedAxes": ["management", "sales", "organization", "marketing"],
+      "required": true
+    },
+    {
+      "id": "q013",
+      "phase": "priority",
+      "type": "single-choice",
+      "question": "予算・リソース投資の優先順位は?",
+      "options": [
+        {
+          "id": "q013_a",
+          "label": "人材採用・育成",
+          "weight": { "management": 0.4, "sales": 0.3, "organization": 0.9, "marketing": 0.2 }
+        },
+        {
+          "id": "q013_b",
+          "label": "営業・マーケティング施策",
+          "weight": { "management": 0.3, "sales": 0.8, "organization": 0.2, "marketing": 0.8 }
+        },
+        {
+          "id": "q013_c",
+          "label": "ITツール・システム",
+          "weight": { "management": 0.6, "sales": 0.6, "organization": 0.4, "marketing": 0.6 }
+        },
+        {
+          "id": "q013_d",
+          "label": "まだ決まっていない",
+          "weight": { "management": 0.3, "sales": 0.3, "organization": 0.3, "marketing": 0.3 }
+        }
+      ],
+      "relatedAxes": ["management", "organization", "sales", "marketing"],
+      "required": true
+    },
+    {
+      "id": "q014",
+      "phase": "summary",
+      "type": "text",
+      "question": "その他、現在抱えている課題や懸念事項があれば自由にご記入ください",
+      "relatedAxes": ["management", "sales", "organization", "marketing"],
+      "required": false
+    },
+    {
+      "id": "q015",
+      "phase": "summary",
+      "type": "scale",
+      "question": "本診断の満足度を5段階で評価してください",
+      "scaleRange": {
+        "min": 1,
+        "max": 5,
+        "minLabel": "不満",
+        "maxLabel": "非常に満足"
+      },
+      "relatedAxes": ["management"],
+      "required": false
+    }
+  ],
+  "scoringConfig": {
+    "axisWeights": {
+      "management": 1.5,
+      "sales": 1.2,
+      "organization": 1.0,
+      "marketing": 1.0
+    },
+    "valueDimensionMapping": {
+      "management": ["vision", "strategy"],
+      "sales": ["execution", "customer"],
+      "organization": ["talent", "execution"],
+      "marketing": ["customer", "innovation"]
+    }
+  }
+}
