@@ -6,10 +6,9 @@
  */
 
 import fs from 'fs/promises';
-// @ts-ignore - pdf-parse types are incomplete
-import * as pdfParseMod from 'pdf-parse';
-const pdfParse = (pdfParseMod as any).default || pdfParseMod;
-import type { ParserOptions, ParsedStatement, AccountItem, Amount } from '../types/financial.js';
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse');
+import type { ParserOptions, ParsedStatement, AccountItem } from '../types/financial.js';
 import { parseAmount, normalizeAccountName, cleanText, parseDate } from './normalizer.js';
 
 /**
@@ -30,7 +29,6 @@ export async function parsePdf(
     const dataBuffer = await fs.readFile(filePath);
 
     // pdf-parseでパース
-    // @ts-ignore - pdf-parse default export callable
     const pdfData = await pdfParse(dataBuffer, {
       max: options.chunkSize ? Math.floor(options.chunkSize / 1024) : undefined,
     });
@@ -151,7 +149,7 @@ function extractCompanyInfo(lines: string[]) {
 
     // 株式会社を含む行を企業名候補とする
     if (line.includes('株式会社') && !name) {
-      name = line.replace(/\(.*\)/, '').trim();
+      name = line.replace(/(.*)/, '').trim();
     }
   }
 
@@ -333,7 +331,7 @@ function extractAccountItems(lines: string[]): AccountItem[] {
   for (const line of lines) {
     // 勘定科目名と金額のパターンマッチング
     // 例: "現金及び預金 1,234,567"
-    const match = line.match(/^([^\d]+)\s+([\d,\-\(\)]+(?:円|千円|百万円|億円)?)\s*$/);
+    const match = line.match(/^([^\d]+)\s+([\d,\-()]+(?:円|千円|百万円|億円)?)\s*$/);
 
     if (match) {
       const name = normalizeAccountName(match[1]);

@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ProposalGenerator } from '../proposal-generator.js';
-import { ClaudeClient } from '../claude-client.js';
+import { ClaudeClient as _ClaudeClient } from '../claude-client.js';
 import { getSystemPrompt, buildProposalPrompt } from '../prompt-templates.js';
 import type { ProposalGenerationRequest } from '../../types/proposal.js';
 

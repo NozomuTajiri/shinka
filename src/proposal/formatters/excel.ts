@@ -6,7 +6,7 @@
 
 import ExcelJS from 'exceljs';
 import type { ConsultingProposal, CoreValue } from '../../types/proposal.js';
-import { writeFile } from 'fs/promises';
+import { writeFile as _writeFile } from 'fs/promises';
 
 /**
  * Excel フォーマットオプション

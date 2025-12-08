@@ -58,8 +58,8 @@ export function useProposal(proposalId: string) {
       return response.json();
     },
     // 生成中の場合は5秒ごとにポーリング
-    refetchInterval: (data) => {
-      return data?.status === 'generating' ? 5000 : false;
+    refetchInterval: (query) => {
+      return query.state.data?.status === 'generating' ? 5000 : false;
     },
     staleTime: 10 * 60 * 1000,
   });
