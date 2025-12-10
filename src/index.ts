@@ -1,42 +1,71 @@
 /**
- * shinka - Entry Point
+ * Shinkai AI Consulting System
  *
- * Autonomous development powered by Miyabi framework
+ * 5つのコンサルタントアバター + Mother AI による
+ * AIコンサルティングプラットフォーム
+ *
+ * @module shinkai
  */
 
-console.log('🌸 Welcome to shinka!');
-console.log('Powered by Miyabi - Autonomous AI Development Framework');
-console.log('');
-console.log('This project includes:');
-console.log('  ✓ 7 AI agents ready to work');
-console.log('  ✓ Automatic Issue → PR pipeline');
-console.log('  ✓ 53-label state machine');
-console.log('  ✓ CI/CD automation');
-console.log('');
-console.log('Next steps:');
-console.log('  1. Create an issue: gh issue create --title "Your task"');
-console.log('  2. Watch agents work: npx miyabi status --watch');
-console.log('  3. Review the PR when ready');
-console.log('');
-console.log('Documentation: See CLAUDE.md and README.md');
+// System
+export * from './types.js';
+export {
+  ShinkaiSystem,
+  getSystem,
+  createSystem,
+  initializeSystem,
+} from './system.js';
 
-export function hello(): string {
-  return 'Hello from shinka!';
-}
+// Avatars
+export { HirakuAvatar } from './avatars/hiraku/index.js';
+export { SenryakuAvatar } from './avatars/senryaku/index.js';
+export { EigyoAvatar } from './avatars/eigyo/index.js';
+export { ShijoAvatar } from './avatars/shijo/index.js';
+export { KanriAvatar } from './avatars/kanri/index.js';
 
-// Example async function
-export async function main(): Promise<void> {
-  console.log('Starting application...');
+// Protocols
+export {
+  ReportEngine,
+  RequestEngine,
+  ArbitrationEngine,
+  SessionEngine,
+  InsightEngine as ProtocolInsightEngine,
+  initializeProtocols,
+} from './protocols/index.js';
 
-  // Your application logic here
+// Avatar Templates
+export {
+  AvatarBuilder,
+  createAvatarBuilder,
+  ValidationEngine,
+  WorkflowEngine,
+  CATEGORY_TEMPLATES,
+  initializeTemplateSystem,
+} from './avatar-templates/index.js';
 
-  console.log('Application started successfully');
-}
+// Mother AI Engines
+export { AvatarBuilderEngine } from './mother-ai/engines/avatar-builder/index.js';
+export { ConsolidationEngine } from './mother-ai/engines/consolidation/index.js';
+export { InsightEngine as MotherAIInsightEngine } from './mother-ai/engines/insight/index.js';
+export { QualityEngine } from './mother-ai/engines/quality/index.js';
 
-// Run main if this is the entry point
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    console.error('Error:', error);
-    process.exit(1);
-  });
-}
+/**
+ * クイックスタート
+ *
+ * @example
+ * ```typescript
+ * import { initializeSystem, getSystem } from 'shinkai';
+ *
+ * // システム初期化
+ * const result = await initializeSystem({
+ *   environment: 'development',
+ *   logLevel: 'debug',
+ * });
+ *
+ * if (result.success) {
+ *   const system = getSystem();
+ *   const hiraku = system.getComponent('hiraku');
+ *   // アバターを使用...
+ * }
+ * ```
+ */
