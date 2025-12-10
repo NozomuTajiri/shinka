@@ -8,12 +8,14 @@
 export * from './types.js';
 
 // コアエンジン
-export { ScenarioEngine } from './scenario-engine.js';
-export { ScoringModel } from './scoring-model.js';
-export { ReportGenerator } from './report-generator.js';
+import { ScenarioEngine } from './scenario-engine.js';
+import { ScoringModel } from './scoring-model.js';
+import { ReportGenerator } from './report-generator.js';
+
+export { ScenarioEngine, ScoringModel, ReportGenerator };
 
 // デフォルトシナリオ
-import initialDiagnosisScenario from './scenarios/initial-diagnosis.json' assert { type: 'json' };
+import initialDiagnosisScenario from './scenarios/initial-diagnosis.json' with { type: 'json' };
 import type { DiagnosisScenario } from './types.js';
 
 export const DEFAULT_SCENARIO = initialDiagnosisScenario as DiagnosisScenario;

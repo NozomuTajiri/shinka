@@ -21,6 +21,9 @@ import type {
   AlertType,
 } from './types.js';
 
+// Alias for backwards compatibility with system.ts
+export { QualityMonitoringEngine as QualityEngine };
+
 export class QualityMonitoringEngine {
   private anthropic: Anthropic;
   private metricsHistory: Map<string, QualityMetrics[]>;

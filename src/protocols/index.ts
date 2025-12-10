@@ -14,15 +14,34 @@
 export * from './report/index.js';
 export { ReportEngine } from './report/report-engine.js';
 
-// Request Protocol
-export * from './request/index.js';
+// Request Protocol - Renamed AgendaItem to avoid conflict
+export type {
+  RequestType,
+  RequestPriority,
+  RequestStatus,
+  RequestMetadata,
+  InformationRequest,
+  InformationResponse,
+  AnalysisRequest,
+  DataItem,
+  AnalysisResponse,
+  Finding,
+  Recommendation,
+  ParticipationRequest,
+  ParticipationResponse,
+  SupportRequest,
+  SupportResponse,
+  RequestSLA,
+  RequestRouting,
+} from './request/types.js';
+export type { AgendaItem as RequestAgendaItem } from './request/types.js';
 export { RequestEngine } from './request/request-engine.js';
 
 // Arbitration Protocol
 export * from './arbitration/index.js';
 export { ArbitrationEngine } from './arbitration/arbitration-engine.js';
 
-// Joint Session Protocol
+// Joint Session Protocol - AgendaItem exported here
 export * from './joint-session/index.js';
 export { SessionEngine } from './joint-session/session-engine.js';
 

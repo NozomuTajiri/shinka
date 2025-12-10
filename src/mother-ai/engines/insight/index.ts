@@ -20,6 +20,9 @@ import type {
   Recipient,
 } from './types.js';
 
+// Alias for backwards compatibility with system.ts
+export { CrossClientInsightEngine as InsightEngine };
+
 export class CrossClientInsightEngine {
   private anthropic: Anthropic;
   private activities: Map<string, ClientActivity>;

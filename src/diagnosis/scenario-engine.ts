@@ -130,7 +130,7 @@ export class ScenarioEngine {
 
     // スキップ条件評価
     let actualNextQuestionId = nextQuestionId;
-    let nextQuestion = this.questionMap.get(actualNextQuestionId);
+    let nextQuestion: DiagnosisQuestion | null = this.questionMap.get(actualNextQuestionId) ?? null;
 
     while (nextQuestion && this.shouldSkipQuestion(nextQuestion)) {
       // スキップされた質問を記録

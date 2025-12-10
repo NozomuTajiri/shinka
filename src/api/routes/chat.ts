@@ -149,7 +149,7 @@ export async function streamMessage(
     const context = buildContext(session.messages, searchResults);
 
     // Claude API呼び出し（ストリーミング）
-    const stream = createStreamingResponse(
+    const stream = await createStreamingResponse(
       avatar,
       content,
       context,
